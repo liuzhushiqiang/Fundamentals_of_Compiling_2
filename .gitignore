@@ -23,4 +23,9 @@
 # Others, added by liuzhushiqiang
 Debug/
 justfortest/Debug/
-
+*.opensdf
+*.sln
+*.suo
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
