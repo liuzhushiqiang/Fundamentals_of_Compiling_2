@@ -4,12 +4,13 @@ typedef map<char, int> Index;
 
 class CFG{		//文法类
 private:
-	char terminals[50];		//终结符
-	int terninals_count;	
-	char nonterminals[50];		//非终结符
-	int nonterminals_count;
-	string productions[100];	//产生式
-	int productions_count;
+	char terminals[50] = {'k', 'i', 'n', '+', '-', '=', '*', '/', '(', ')', '{', '}'};		//终结符
+	int terninals_count = 12;	
+	char nonterminals[50] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};		//非终结符
+	int nonterminals_count = 8;
+	string productions[100] = {"AB(){C}", "B!", "BkiD", "D!", 
+	"D,iD", "D;", "C!", "CE;C", "Ei=F", "EB", "FF+G", "FF-G", "FG", "GG*H", "GG/H", "GH", "H(F)", "Hi", "Hn"};	//产生式
+	int productions_count = 19;		
 	string first[50];	//first集合
 	string follow[50];	//follow集合
 	Index terminals_index;	//终结符的索引
@@ -19,6 +20,37 @@ private:
 public:
 	CFG(char* T, int T_count, char* N, int N_count, string* P, int P_count){
 		//待实现，初始化CFG，并进行消左递归和左因子操作（消左递归和左因子也可以单独写一个函数）
+	}
+
+	CFG(){
+		//手动初始化一些私有属性
+		for(int i = 0; i < terninals_count; i++){
+			terminals_index[terminals[i]] = i;
+		}
+		for(int i = 0; i < nonterminals_count; i++){
+			nonterminals_index[nonterminals[i]] = i;
+		}
+		nonterminals_index_in_productions[nonterminals[0]] = 0;
+		for(int i = 1, j = 0; i < productions_count; i++){
+			if(productions[i][0] != productions[i - 1][0]){
+				nonterminals_index_in_productions[nonterminals[j]] = i;
+				j++;
+			}
+		}
+
+		//消除左递归和左因子
+		eleminate_left_recursion();
+		eleminate_left_divisor();
+	}
+
+	void eleminate_left_recursion(){
+		for(int i = 0; i < productions_count; i++){
+			if(productions)
+		}
+	}
+
+	void eleminate_left_divisor(){
+
 	}
 
 	string calculate_first(string s1){
@@ -59,12 +91,13 @@ private:
 class Symbol_Table_Manager{		//符号表管理器类
 private:
 	Symbol_Table_Item symbol_table[1000];	//符号表
+	int Symbol_Table_Item_Count;
 };
 
 class Analysis_Tree_Node{		//该类代表分析树中的结点，其指针类型代表一颗分析树
 private:
-	int index_in_symbol_table;	//终结符在符号表中的下标或者非终结符在CFG中的下标
-	Analysis_Tree_Node *firstchild, *nextsibling;		//二叉树的二叉链表表示法
+	int index_in_symbol_table;	//元素在符号表中的下标
+	Analysis_Tree_Node *firstchild, *nextsibling;		//树的二叉链表表示法
 };
 
 typedef Analysis_Tree_Node *Analysis_Tree;		//分析树
@@ -72,6 +105,7 @@ typedef Analysis_Tree_Node *Analysis_Tree;		//分析树
 class LL1_Driver{		//驱动器类，实现LL(1)驱动器算法
 private:
 	stack<char> symbol_stack;	//符号栈
+	stack<int> index_in_symbol_table_stack	//存储符号栈中的元素在符号表中对应的下标 
 
 public:
 	Analysis_Tree run_driver(Symbol_Table_Manager stm, Predicting_Analysis_Table pat){
