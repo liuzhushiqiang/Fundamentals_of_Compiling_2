@@ -19,12 +19,12 @@ public:
 		isolation_count = production_isolation.size();
 	}
 
-	//×Ö·û´®·Ö¸îº¯Êı
+	//å­—ç¬¦ä¸²åˆ†å‰²å‡½æ•°
  	std::vector<std::string> split(std::string str,std::string pattern)
  	{
     	std::string::size_type pos;
    		std::vector<std::string> result;
-   		str+=pattern;//À©Õ¹×Ö·û´®ÒÔ·½±ã²Ù×÷
+   		str+=pattern;//æ‰©å±•å­—ç¬¦ä¸²ä»¥æ–¹ä¾¿æ“ä½œ
    		int size=str.size();	
    		for(int i=0; i<size; i++)
    		{
@@ -40,18 +40,18 @@ public:
  	}
 };
 
-class CFG{		//ÎÄ·¨Àà
+class CFG{		//æ–‡æ³•ç±»
 private:
-	char terminals[50];		//ÖÕ½á·û
+	char terminals[50];		//ç»ˆç»“ç¬¦
 	int terninals_count;	
-	char nonterminals[50];		//·ÇÖÕ½á·û
+	char nonterminals[50];		//éç»ˆç»“ç¬¦
 	int nonterminals_count;
-	Production pro[100];	//²úÉúÊ½
+	Production pro[100];	//äº§ç”Ÿå¼
 	int productions_count;		
-	string first[50]; 	//first¼¯ºÏ
-	string follow[50];	//follow¼¯ºÏ
-	Index terminals_index;	//ÖÕ½á·ûµÄË÷Òı
-	Index nonterminals_index;	//·ÇÖÕ¼«·ûµÄË÷Òı
+	string first[50]; 	//firsté›†åˆ
+	string follow[50];	//followé›†åˆ
+	Index terminals_index;	//ç»ˆç»“ç¬¦çš„ç´¢å¼•
+	Index nonterminals_index;	//éç»ˆæç¬¦çš„ç´¢å¼•
 
 public:
 
@@ -69,7 +69,7 @@ public:
 			pro[i] = new Production(p[i]);
 		}
 
-		//Ïû³ı×óµİ¹éºÍ×óÒò×Ó
+		//æ¶ˆé™¤å·¦é€’å½’å’Œå·¦å› å­
 		eleminate_left_recursion();
 		eleminate_left_divisor();
 	}
@@ -88,70 +88,70 @@ public:
 
 	string calculate_first(string s1){
 		string ret;
-		//´ıÊµÏÖ£¨¼ÆËãfirst¼¯ºÏ£©
+		//å¾…å®ç°ï¼ˆè®¡ç®—firsté›†åˆï¼‰
 		return ret;
 	}
 
 	string calculate_follow(string s1){
 		string ret;
-		//´ıÊµÏÖ£¨¼ÆËãfollow¼¯ºÏ£©
+		//å¾…å®ç°ï¼ˆè®¡ç®—followé›†åˆï¼‰
 		return ret;
 	}
 };
 
-class Predicting_Analysis_Table{		//Ô¤²â·ÖÎö±íÀà
+class Predicting_Analysis_Table{		//é¢„æµ‹åˆ†æè¡¨ç±»
 private:
-	Index terminals_index;	//ÖÕ½á·ûµÄË÷Òı
-	Index nonterminals_index;	//·ÇÖÕ½á·ûµÄË÷Òı
-	string predicting_analysis_table[50][50];	//Ô¤²â·ÖÎö±í
+	Index terminals_index;	//ç»ˆç»“ç¬¦çš„ç´¢å¼•
+	Index nonterminals_index;	//éç»ˆç»“ç¬¦çš„ç´¢å¼•
+	string predicting_analysis_table[50][50];	//é¢„æµ‹åˆ†æè¡¨
 
 public:
 	Predicting_Analysis_Table(CFG cfg){
-		//´ıÊµÏÖ£¬¹¹ÔìÔ¤²â·ÖÎö±í
+		//å¾…å®ç°ï¼Œæ„é€ é¢„æµ‹åˆ†æè¡¨
 	}
 };
 
-class Symbol_Table_Item{		//·ûºÅ±íÖĞµÄÒ»Ìõ¼ÇÂ¼
+class Symbol_Table_Item{		//ç¬¦å·è¡¨ä¸­çš„ä¸€æ¡è®°å½•
 private:
-	string internal_identification;		//¼ÇºÅµÄÄÚ²¿±íÊ¾
-	string external_identification;		//¼ÇºÅµÄÍâ²¿±íÊ¾
-	char grammar_identification;	//¼ÇºÅÔÚÎÄ·¨ÖĞµÄ±íÊ¾
-	int token_index;	//¼ÇºÅµÄÀàĞÍ±àºÅ
-	int address;	//Èç¹ûÊÇ±êÊ¶·û£¬Ôò´æ´¢¼ÇºÅµÄµØÖ·
-	int size;	//Èç¹ûÊÇ±êÊ¶·û£¬Ôò´æ´¢ÔÚÄÚ´æÖĞËùÕ¼µÄ´óĞ¡
+	string internal_identification;		//è®°å·çš„å†…éƒ¨è¡¨ç¤º
+	string external_identification;		//è®°å·çš„å¤–éƒ¨è¡¨ç¤º
+	char grammar_identification;	//è®°å·åœ¨æ–‡æ³•ä¸­çš„è¡¨ç¤º
+	int token_index;	//è®°å·çš„ç±»å‹ç¼–å·
+	int address;	//å¦‚æœæ˜¯æ ‡è¯†ç¬¦ï¼Œåˆ™å­˜å‚¨è®°å·çš„åœ°å€
+	int size;	//å¦‚æœæ˜¯æ ‡è¯†ç¬¦ï¼Œåˆ™å­˜å‚¨åœ¨å†…å­˜ä¸­æ‰€å çš„å¤§å°
 };
 
-class Symbol_Table_Manager{		//·ûºÅ±í¹ÜÀíÆ÷Àà
+class Symbol_Table_Manager{		//ç¬¦å·è¡¨ç®¡ç†å™¨ç±»
 private:
-	Symbol_Table_Item symbol_table[1000];	//·ûºÅ±í
+	Symbol_Table_Item symbol_table[1000];	//ç¬¦å·è¡¨
 	int Symbol_Table_Item_Count;
 };
 
-class Analysis_Tree_Node{		//¸ÃÀà´ú±í·ÖÎöÊ÷ÖĞµÄ½áµã£¬ÆäÖ¸ÕëÀàĞÍ´ú±íÒ»¿Å·ÖÎöÊ÷
+class Analysis_Tree_Node{		//è¯¥ç±»ä»£è¡¨åˆ†ææ ‘ä¸­çš„ç»“ç‚¹ï¼Œå…¶æŒ‡é’ˆç±»å‹ä»£è¡¨ä¸€é¢—åˆ†ææ ‘
 private:
-	int index_in_symbol_table;	//ÔªËØÔÚ·ûºÅ±íÖĞµÄÏÂ±ê
-	Analysis_Tree_Node *firstchild, *nextsibling;		//Ê÷µÄ¶ş²æÁ´±í±íÊ¾·¨
+	int index_in_symbol_table;	//å…ƒç´ åœ¨ç¬¦å·è¡¨ä¸­çš„ä¸‹æ ‡
+	Analysis_Tree_Node *firstchild, *nextsibling;		//æ ‘çš„äºŒå‰é“¾è¡¨è¡¨ç¤ºæ³•
 };
 
-typedef Analysis_Tree_Node *Analysis_Tree;		//·ÖÎöÊ÷
+typedef Analysis_Tree_Node *Analysis_Tree;		//åˆ†ææ ‘
 
-class LL1_Driver{		//Çı¶¯Æ÷Àà£¬ÊµÏÖLL(1)Çı¶¯Æ÷Ëã·¨
+class LL1_Driver{		//é©±åŠ¨å™¨ç±»ï¼Œå®ç°LL(1)é©±åŠ¨å™¨ç®—æ³•
 private:
-	stack<char> symbol_stack;	//·ûºÅÕ»
-	stack<int> index_in_symbol_table_stack;	//´æ´¢·ûºÅÕ»ÖĞµÄÔªËØÔÚ·ûºÅ±íÖĞ¶ÔÓ¦µÄÏÂ±ê,Á½¸öÕ»±£³Ö¶¯×÷µÄÍ¬²½ 
+	stack<char> symbol_stack;	//ç¬¦å·æ ˆ
+	stack<int> index_in_symbol_table_stack;	//å­˜å‚¨ç¬¦å·æ ˆä¸­çš„å…ƒç´ åœ¨ç¬¦å·è¡¨ä¸­å¯¹åº”çš„ä¸‹æ ‡,ä¸¤ä¸ªæ ˆä¿æŒåŠ¨ä½œçš„åŒæ­¥ 
 
 public:
 	Analysis_Tree run_driver(Symbol_Table_Manager stm, Predicting_Analysis_Table pat){
 		Analysis_Tree ret = new Analysis_Tree_Node();
-		//´ıÊµÏÖ(Çı¶¯Æ÷Ëã·¨)
+		//å¾…å®ç°(é©±åŠ¨å™¨ç®—æ³•)
 		return ret;
 	}
 };
 
 int main(){
-	char terminals[50] = {'k', 'i', 'n', '+', '-', '=', '*', '/', '(', ')', '{', '}'};		//ÖÕ½á·û
+	char terminals[50] = {'k', 'i', 'n', '+', '-', '=', '*', '/', '(', ')', '{', '}'};		//ç»ˆç»“ç¬¦
 	int terninals_count = 12;	
-	char nonterminals[50] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};		//·ÇÖÕ½á·û
+	char nonterminals[50] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};		//éç»ˆç»“ç¬¦
 	int nonterminals_count = 8;		
 	string pro_array[50] = {"B(){C}", "kiD", ",iD|;|!", "E;C|!", "i=F|B", "F+G|F-G|G", "G*H|G/H|H", "(F)|i|n"};
 	int productions_count = 8;
