@@ -4,18 +4,23 @@
 #include <string>
 #include <algorithm>
 typedef map<char, int> Index;
+typedef std::vector<string>::iterator Vector_Int_Iteraror
 
+/**
+ * 产生式类
+ */
 class Production{
 private:
+	string left;
 	string production_union;
 	vector<string> production_isolation;
 	int isolation_count;
 
 public:
-	Production(string s){
+	Production(string l, string s){
+		left = l;
 		production_union = s;
-		production_isolation = split(production_union, "|");
-		sort(production_isolation.begin(), production_isolation.end());
+		union_to_isolation(s, production_isolation);
 		isolation_count = production_isolation.size();
 	}
 
@@ -37,6 +42,31 @@ public:
    		    }
     	}	
      	return result;
+ 	}
+
+ 	/**
+ 	 * [union_to_isolation description]
+ 	 * @param s [description]
+ 	 * @param v [description]
+ 	 */
+ 	void union_to_isolation(string s, std::vector<string>& v){
+ 		v = split(production_union, "|");
+		sort(v.begin(), v.end());
+ 	}
+
+ 	/**
+ 	 * [isolation_to_union description]
+ 	 * @param s [description]
+ 	 * @param v [description]
+ 	 */
+ 	void isolation_to_union(string& s, std::vector<string> v){
+ 		s = "";
+ 		std::vector<string>::iterator it;
+ 		for(it = v.begin(); it.next() != v.end(); it++){
+ 			s += *it;
+ 			s += "|";
+ 		}
+ 		s += *it;
  	}
 };
 
@@ -66,7 +96,7 @@ public:
 		}
 		
 		for(int i = 0; i < p_count; i++){
-			pro[i] = new Production(p[i]);
+			pro[i] = new Production(nonterminals[i], p[i]);
 		}
 
 		//消除左递归和左因子
@@ -76,8 +106,20 @@ public:
 
 	void eleminate_left_recursion(){
 		for(int i = nonterminals_count - 2; i >= 0; i--){
+				Production temp = pro[i];
+				Vector_Int_Iteraror it;
 			for(int j = nonterminals_count - 1; j >= i + 1; j--){
+				int flag = 0;
+				for(it = temp.production_isolation.begin(); it != temp.end(); it++){
+					if(*it == temp.left){
+						flag = 1;
+						break;
+					}
+				}
 				
+				if(*it == "!"){
+
+				}
 			}
 		}
 	}
