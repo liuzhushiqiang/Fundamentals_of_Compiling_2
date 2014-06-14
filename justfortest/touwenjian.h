@@ -106,20 +106,47 @@ public:
 
 	void eleminate_left_recursion(){
 		for(int i = nonterminals_count - 2; i >= 0; i--){
+			//i从n-2到0，temp是下标为i的产生式，it是temp.production的迭代器
 				Production temp = pro[i];
 				Vector_Int_Iteraror it;
+				std::vector<string> v;
 			for(int j = nonterminals_count - 1; j >= i + 1; j--){
-				int flag = 0;
+				//j从n-1到i-1
 				for(it = temp.production_isolation.begin(); it != temp.end(); it++){
-					if(*it == temp.left){
-						flag = 1;
-						break;
+						if((*it)[0] == pro[j].left){
+							for(int ind_1 = 0; ind_1 < pro[j].isolation_count; ind_1++){
+								temp.production_isolation.push_back(pro[j].production_isolation[ind_1] + (*it).substr(1, (*it).size() - 1));
+								temp.production_isolation.erase(it);
+							}
+						}
+
 					}
 				}
-				
-				if(*it == "!"){
+				/**
+				 * 消除Ai的直接做递归
+				 */
+				//先判断是否有直接做递归
+				int flag = 0;
+				for(std::vector<string> it1 = temp.production_isolation.begin(); it != temp.end(); it++)
 
-				}
+				//如果有直接进做递归则做这一步
+				if(flag == 1){
+					//先把所有的产生式后移，并修改相应的非终结符
+					for(int k1 = nonterminals_count; k1 >= i + 2; k--){
+						pro[k1] = pro[k1 - 1];
+						pro[k1].left++;
+							for(int k2 = 0; k2 < pro[k1].size(); k2++){
+								if(pro[k1].production_union[k2] - pro[i].left >= 0 && pro[k1].production_union[k2] - '\0' < 91){
+									pro[k1].production_union[k2]++;
+								}
+							}
+							union_to_isolation(pro[k1].production_union, pro[k1].production_isolation);
+							pro[k1].isolation_count = pro[k1].production_isolation.size();
+						}
+
+						//创建新的非终结符，并创建production对象。
+				
+
 			}
 		}
 	}
@@ -128,9 +155,24 @@ public:
 
 	}
 
-	string calculate_first(string s1){
-		string ret;
+	vector<char> calculate_first(string s1){
+		vector<char> ret;
 		//待实现（计算first集合）
+		for(int i = productions_count - 1; i >= 0; i--){
+			Production p_temp = pro[i];
+			vector<string>::Iterator it;
+			for(it = p_temp.productio_isolation.start(); it != p_temp.production_isolation.end(); it++){
+				for(int j = 0; j < (*it).size(); j++){
+					if((*it)[j] >= 97){
+						ret.put_back();
+						break;
+					}else if((*it)[j] >= 65 && first[nonterminal_index[(*it)[j]][0] == "!"){
+						ret.put_back()
+					}
+
+				}
+			}
+		} 
 		return ret;
 	}
 
