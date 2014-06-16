@@ -345,6 +345,13 @@ public:
 
 public:
 	Predicting_Analysis_Table(CFG& cfg){
+		//初始化
+		for(int i = 0; i < 50; i++){
+			for(int j = 0; j < 50; j++){
+				predicting_analysis_table[i][j] = "";
+			}
+		}
+
 		//待实现，构造预测分析表
 		for(int i = 0; i < cfg.terninals_count; i++){
 			terminals[i] = cfg.terminals[i];
@@ -397,34 +404,43 @@ public:
 			cout<<endl;
 		}
 	}
-};
 
-class Symbol_Table_Item{		//符号表中的一条记录
-public:
-	string internal_identification;		//记号的内部表示
-	string external_identification;		//记号的外部表示
-	char grammar_identification;	//记号在文法中的表示
-	int token_index;	//记号的类型编号
-	int address;	//如果是标识符，则存储记号的地址
-	int size;	//如果是标识符，则存储在内存中所占的大小
-
-	void init(char c){
-		grammar_identification = c;
-	}
-};
-
-class Symbol_Table_Manager{		//符号表管理器类
-public:
-	Symbol_Table_Item symbol_table[1000];	//符号表
-	int symbol_table_item_count;
-
-	Symbol_Table_Manager(string s){
-		symbol_table_item_count = s.size();
-		for(int i = 0; i < s.size(); i++){
-			symbol_table[i].init(s[i]);
+	int search_table(char c1, char c2, string& result){
+		if(predicting_analysis_table[nonterminals_index[c1]][terminals_index[c2]] != ""){
+			result = predicting_analysis_table[nonterminals_index[c1]][terminals_index[c2]];
+			return 1;
+		}else{
+			return 0;
 		}
 	}
 };
+
+//class Symbol_Table_Item{		//符号表中的一条记录
+//public:
+//	string internal_identification;		//记号的内部表示
+//	string external_identification;		//记号的外部表示
+//	char grammar_identification;	//记号在文法中的表示
+//	int token_index;	//记号的类型编号
+//	int address;	//如果是标识符，则存储记号的地址
+//	int size;	//如果是标识符，则存储在内存中所占的大小
+//
+//	void init(char c){
+//		grammar_identification = c;
+//	}
+//};
+//
+//class Symbol_Table_Manager{		//符号表管理器类
+//public:
+//	Symbol_Table_Item symbol_table[1000];	//符号表
+//	int symbol_table_item_count;
+//
+//	Symbol_Table_Manager(string s){
+//		symbol_table_item_count = s.size();
+//		for(int i = 0; i < s.size(); i++){
+//			symbol_table[i].init(s[i]);
+//		}
+//	}
+//};
 
 //class Analysis_Tree_Node{		//该类代表分析树中的结点，其指针类型代表一颗分析树
 //private:
@@ -441,10 +457,71 @@ public:
 	//存储符号栈中的元素在符号表中对应的下标,两个栈保持动作的同步 
 
 public:
-	int run_driver(Symbol_Table_Manager stm, Predicting_Analysis_Table pat){
+	int run_driver(string s, Predicting_Analysis_Table& pat){
 		//Analysis_Tree ret = new Analysis_Tree_Node();
 		//待实现(驱动器算法)
 		int error_code = 0;
+		string present_input = s + "#";
+		
+		//初始化第一个格局
+		symbol_stack.push('#');
+		symbol_stack.push('A');
+
+		int ind = 0;
+		//格局转换
+		while(1){
+			char c1 = symbol_stack.top();
+			char c2 = present_input[ind];
+			if(c1 == '#'){
+				if(c2 == '#'){
+					error_code = 0;
+					break;
+				}else{
+					//出错，代码3表示“其他错误”
+					error_code = 3;
+					break;
+				}
+			}
+			string result = "";
+			if(c1 - 'A' >= 0 && 'Z' - c1 >=0){
+				if(pat.search_table(c1, c2, result)){
+					if(result == "!"){
+						char temp;
+						temp = symbol_stack.top();
+						symbol_stack.pop();
+						//打印
+						cout<<"按"<<temp<<"-->"<<result<<"展开"<<endl;
+					}else{
+						char temp = symbol_stack.top();
+						symbol_stack.pop();
+						for(int i = result.size() - 1; i >= 0; i--){
+							symbol_stack.push(result[i]);		
+						}
+						//打印
+						cout<<"按"<<temp<<"-->"<<result<<"展开"<<endl;
+					}
+					continue;
+				}else{
+					//表示出错，代码1表示“产生式不匹配”
+					error_code = 1;
+					break;
+				}
+			}else{
+				//是终结符
+				if(c1 == c2){
+					char temp = symbol_stack.top();
+					symbol_stack.pop();
+					//打印
+					cout<<"匹配"<<temp<<endl;
+					ind++;
+					continue;
+				}else{
+					//出错，代码2表示“栈顶终结符不匹配”
+					error_code = 2;
+					break;
+				}
+			}
+		}
 
 		return error_code;
 	}
@@ -477,8 +554,17 @@ int main(){
 	cfg.display_follow();
 	Predicting_Analysis_Table pat(cfg);
 	pat.display_predicting_analysis_table();
-	Symbol_Table_Manager stm("abbcde");
-	LL1_Driver ll1_driver(stm, pat);
-	int error_code = ll1_driver.run_driver();
+	//Symbol_Table_Manager stm("abbcde");
+	LL1_Driver ll1_driver;
+	int error_code = ll1_driver.run_driver("aabcde", pat);
+	if(error_code == 0){
+		cout<<"正确结束"<<endl;
+	}else if(error_code == 1){
+		cout<<"出错，产生式不匹配"<<endl;
+	}else if(error_code == 2){
+		cout<<"出错，栈顶终结符不匹配"<<endl;
+	}else if(error_code == 3){
+		cout<<"出错，其他错误"<<endl;
+	}
 	return 0;
 }
