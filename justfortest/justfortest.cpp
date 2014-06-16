@@ -8,7 +8,6 @@
 using namespace std;
 
 typedef map<char, int> Index;
-typedef std::vector<string>::iterator Vector_Int_Iteraror;
 
 /**
 * 产生式类
@@ -18,15 +17,13 @@ public:
 	char left;
 	string production_union;
 	vector<string> production_isolation;
-	int isolation_count;
 
 public:
 
 	void init(char l, string s){
 		left = l;
 		production_union = s;
-		union_to_isolation(s, production_isolation);
-		isolation_count = production_isolation.size();
+		union_to_isolation(production_union, production_isolation);
 	}
 
 
@@ -61,7 +58,7 @@ public:
 	}
 
 	/**
-	* [isolation_to_union description]
+	* [isolation_to_union ]
 	* @param s [description]
 	* @param v [description]
 	*/
@@ -69,16 +66,14 @@ public:
 		std::vector<string>::iterator it = v.begin();
 		s = *it;
 		for(it++; it != v.end(); it++){
-			s += *it;
 			s += "|";
+			s += *it;
 		}
-		s += *it;
 	}
 
 	void format_from_production_isolation(){
 		sort(production_isolation.begin(), production_isolation.end());
 		isolation_to_union(production_union, production_isolation);
-		isolation_count = production_isolation.size();
 	}
 
 };
@@ -93,8 +88,6 @@ public:
 	int productions_count;		
 	vector<char> first[50]; 	//first集合
 	vector<char> follow[50];	//follow集合
-	Index terminals_index;	//终结符的索引
-	Index nonterminals_index;	//非终极符的索引
 
 public:
 
@@ -102,12 +95,10 @@ public:
 		terninals_count = t_count;
 		for(int i = 0; i < t_count; i++){
 			terminals[i] = t[i];
-			terminals_index[terminals[i]] = i;
 		}
 		nonterminals_count = n_count;
 		for(int i = 0; i < n_count; i++){
 			nonterminals[i] = n[i];
-			nonterminals_index[nonterminals[i]] = i;
 		}
 
 		productions_count = p_count;
@@ -116,100 +107,120 @@ public:
 		}
 
 		//消除左递归和左因子
-		//eleminate_left_recursion();
-		//eleminate_left_divisor();
+		eleminate_left_recursion();
+		eleminate_left_divisor();
 	}
 
 	void eleminate_left_recursion(){
+		//i从n-2到0，temp是下标为i的产生式，it是temp.production的迭代器
 		for(int i = nonterminals_count - 2; i >= 0; i--){
-			//i从n-2到0，temp是下标为i的产生式，it是temp.production的迭代器
 			Production temp = pro[i];
-			Vector_Int_Iteraror it;
-			std::vector<string> v;
+			//j从n-1到i+1
 			for(int j = nonterminals_count - 1; j >= i + 1; j--){
-				//j从n-1到i-1
-				for(it = temp.production_isolation.begin(); it != temp.production_isolation.end(); 
+				//先执行替换
+				for(vector<string>::iterator it = temp.production_isolation.begin(); it != temp.production_isolation.end(); 
 					it++){
 						if((*it)[0] == pro[j].left){
-							for(int ind_1 = 0; ind_1 < pro[j].isolation_count; ind_1++){
-								temp.production_isolation.push_back(pro[j].production_isolation[ind_1] 
-								+ (*it).substr(1, (*it).size() - 1));
-								temp.production_isolation.erase(it);
+							for(vector<string>::iterator it_vs_j = 
+								pro[j].production_isolation.begin(); 
+								it_vs_j != pro[j].production_isolation.end(); it_vs_j++){
+									temp.production_isolation.push_back(*it_vs_j 
+										+ (*it).substr(1, (*it).size() - 1));
 							}
+							temp.production_isolation.erase(it);
 						}
 
 				}
-			}
-			/**
-			* 消除Ai的直接左递归
-			*/
-			//先判断是否有直接左递归
-			int flag = 0;
-			for(std::vector<string>::iterator it1 = temp.production_isolation.begin(); 
-				it1 != temp.production_isolation.end(); it1++){
-					if((*it1)[0] == temp.left){
-						flag = 1;
-						break;
-					}
-			}
 
-
-			//如果有直接进做递归则做这一步
-			if(flag == 1){
-				//先把所有的产生式后移，并修改相应的非终结符
-				for(int k1 = nonterminals_count; k1 >= i + 2; k1--){
-					pro[k1] = pro[k1 - 1];
-					pro[k1].left++;
-					for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
-						if(pro[k1].production_union[k2] - pro[i].left > 0 
-							&& pro[k1].production_union[k2] - '\0' < 91){
-								pro[k1].production_union[k2]++;
-						}
-					}
-					pro[k1].union_to_isolation(pro[k1].production_union, 
-						pro[k1].production_isolation);
-					pro[k1].isolation_count = pro[k1].production_isolation.size();
-				}
-
-				//创建新的非终结符，并创建production对象。
-				vector<string> new_production_isolation1;
-				vector<string> new_production_isolation2;
-				pro[i + 1].left = pro[i].left + 1;	//pro[i]就是temp
+				/**
+				* 消除Ai的直接左递归
+				*/
+				//先判断是否有直接左递归
+				int flag = 0;
 				for(std::vector<string>::iterator it1 = temp.production_isolation.begin(); 
 					it1 != temp.production_isolation.end(); it1++){
 						if((*it1)[0] == temp.left){
-							new_production_isolation2.push_back((*it).substr(1, 
-								(*it).size() - 1) + pro[i + 1].left);
-							//temp.production_isolation.erase(it);
-						}else{
-							new_production_isolation1.push_back((*it) + pro[i + 1].left);
+							flag = 1;
+							break;
 						}
 				}
-				pro[i].production_isolation = new_production_isolation1;
-				pro[i].format_from_production_isolation();
-				pro[i + 1].production_isolation = new_production_isolation2;
-				pro[i + 1].format_from_production_isolation();
 
-				//更新下标i以前的pro
-				for(int k1 = nonterminals_count - 1; k1 >= 0; k1--){
-					for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
-						if(pro[k1].production_union[k2] - pro[i].left > 0 && 
-							pro[k1].production_union[k2] - '\0' < 91){
-								pro[k1].production_union[k2]++;
+
+				//如果有直接进左递归则做这一步
+				if(flag == 1){
+					//先把所有的产生式后移，并修改相应的非终结符
+					for(int k1 = nonterminals_count; k1 >= i + 2; k1--){
+						nonterminals[k1] = nonterminals[k1 - 1];
+						pro[k1] = pro[k1 - 1];
+						pro[k1].left++;
+						for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
+							if(pro[k1].production_union[k2] - pro[i].left > 0 
+								&& pro[k1].production_union[k2] - '\0' < 91){
+									pro[k1].production_union[k2]++;
+							}
 						}
+						pro[k1].union_to_isolation(pro[k1].production_union, 
+							pro[k1].production_isolation);
 					}
-					pro[k1].union_to_isolation(pro[k1].production_union, 
-						pro[k1].production_isolation);
-					pro[k1].isolation_count = pro[k1].production_isolation.size();
+
+					//创建新的非终结符，并创建production对象。
+					nonterminals[i + 1] = nonterminals[i] + 1;
+
+					vector<string> new_production_isolation1;
+					vector<string> new_production_isolation2;
+					pro[i + 1].left = pro[i].left + 1;	//pro[i]就是temp
+					for(std::vector<string>::iterator it1 = temp.production_isolation.begin(); 
+						it1 != temp.production_isolation.end(); it1++){
+							if((*it1)[0] == temp.left){
+								new_production_isolation2.push_back((*it1).substr(1, 
+									(*it1).size() - 1) + pro[i + 1].left);
+								//temp.production_isolation.erase(it);
+							}else{
+								new_production_isolation1.push_back((*it1) + pro[i + 1].left);
+							}
+					}
+					pro[i].production_isolation = new_production_isolation1;
+					pro[i].format_from_production_isolation();
+					new_production_isolation2.push_back("!");
+					pro[i + 1].production_isolation = new_production_isolation2;
+					pro[i + 1].format_from_production_isolation();
+
+					//更新下标i以前的pro
+					for(int k1 = i - 1; k1 >= 0; k1--){
+						for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
+							if(pro[k1].production_union[k2] - pro[i].left > 0 && 
+								pro[k1].production_union[k2] - '\0' < 91){
+									pro[k1].production_union[k2]++;
+							}
+						}
+						pro[k1].union_to_isolation(pro[k1].production_union, 
+							pro[k1].production_isolation);
+					}
+
+					//更新productions_count,nonterminals_count
+					productions_count ++;
+					nonterminals_count++;
+				}else{
+					continue;
 				}
-			}else{
-				continue;
 			}
 		}
 	}
 
 	void eleminate_left_divisor(){
 
+	}
+
+	void display_productions(){
+		cout<<"产生式："<<endl;
+		for(int i = 0; i < nonterminals_count; i++){
+			cout<<pro[i].left<<"	";
+			for(vector<string>::iterator it_vs = pro[i].production_isolation.begin(); 
+				it_vs != pro[i].production_isolation.end(); it_vs++){
+					cout<<*it_vs<<"	";
+			}
+			cout<<endl;
+		}
 	}
 
 	void calculate_first(){
@@ -235,11 +246,11 @@ public:
 					}else if((*it)[j] >= 65){
 						//是非终结符
 						for(vector<char>::iterator it_char = 
-							first[nonterminals_index[(*it)[j]]].begin();
-							it_char != first[nonterminals_index[(*it)[j]]].end(); it_char++){
+							first[(*it)[j] - 'A'].begin();
+							it_char != first[(*it)[j] - 'A'].end(); it_char++){
 								first[i].push_back(*it_char);
 						}
-						if(first[nonterminals_index[(*it)[j]]][0] == '!'){
+						if(first[(*it)[j] - 'A'][0] == '!'){
 							//如果终结符的first集合包含！，则继续下一个字符
 							continue;
 						}else{
@@ -272,11 +283,11 @@ public:
 			}else if(s[j] >= 65){
 				//是非终结符
 				for(vector<char>::iterator it_char = 
-					first[nonterminals_index[s[j]]].begin();
-					it_char != first[nonterminals_index[s[j]]].end(); it_char++){
+					first[s[j] - 'A'].begin();
+					it_char != first[s[j] - 'A'].end(); it_char++){
 						vc.push_back(*it_char);
 				}
-				if(first[nonterminals_index[s[j]]][0] == '!'){
+				if(first[s[j] - 'A'][0] == '!'){
 					//如果终结符的first集合包含！，则继续下一个字符
 					continue;
 				}else{
@@ -364,7 +375,7 @@ public:
 			nonterminals[i] = cfg.nonterminals[i];
 			nonterminals_index[cfg.nonterminals[i]] = i;
 		}
-		
+
 
 		for(int i = 0; i < cfg.nonterminals_count; i++){
 			for(vector<string>::iterator it_vs = cfg.pro[i].production_isolation.begin(); 
@@ -462,7 +473,7 @@ public:
 		//待实现(驱动器算法)
 		int error_code = 0;
 		string present_input = s + "#";
-		
+
 		//初始化第一个格局
 		symbol_stack.push('#');
 		symbol_stack.push('A');
@@ -537,14 +548,25 @@ int main(){
 	//"F+G|F-G|G", "G*H|G/H|H", "(F)|i|n"};
 	//int productions_count = 8;
 
+	//char terminals[50] = "abcde";		//终结符
+	//int terninals_count = 5;	
+	//char nonterminals[50] = {"ABCD"};		//非终结符
+	//int nonterminals_count = 4;		
+	//string pro_array[50] = {"aBDe", "bC", "!|bcC", "d"};
+	//int productions_count = 4;
+
 	char terminals[50] = "abcde";		//终结符
 	int terninals_count = 5;	
-	char nonterminals[50] = {"ABCD"};		//非终结符
-	int nonterminals_count = 4;		
-	string pro_array[50] = {"aBDe", "bC", "!|bcC", "d"};
-	int productions_count = 4;
+	char nonterminals[50] = {"ABC"};		//非终结符
+	int nonterminals_count = 3;		
+	string pro_array[50] = {"aBCe", "b|Bbc", "d"};
+	int productions_count = 3;
+
 	CFG cfg(terminals, terninals_count, nonterminals, 
 		nonterminals_count, pro_array, productions_count);
+	//cfg.display_productions();
+	//cfg.eleminate_left_recursion();
+	cfg.display_productions();
 	cfg.calculate_first();
 	cfg.display_fisrt();
 	vector<char> vc;
@@ -556,7 +578,7 @@ int main(){
 	pat.display_predicting_analysis_table();
 	//Symbol_Table_Manager stm("abbcde");
 	LL1_Driver ll1_driver;
-	int error_code = ll1_driver.run_driver("aabcde", pat);
+	int error_code = ll1_driver.run_driver("abbcde", pat);
 	if(error_code == 0){
 		cout<<"正确结束"<<endl;
 	}else if(error_code == 1){
