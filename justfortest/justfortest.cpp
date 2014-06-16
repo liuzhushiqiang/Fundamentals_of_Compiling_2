@@ -84,7 +84,7 @@ public:
 };
 
 class CFG{		//文法类
-private:
+public:
 	char terminals[50];		//终结符
 	int terninals_count;	
 	char nonterminals[50];		//非终结符
@@ -128,13 +128,15 @@ public:
 			std::vector<string> v;
 			for(int j = nonterminals_count - 1; j >= i + 1; j--){
 				//j从n-1到i-1
-				for(it = temp.production_isolation.begin(); it != temp.production_isolation.end(); it++){
-					if((*it)[0] == pro[j].left){
-						for(int ind_1 = 0; ind_1 < pro[j].isolation_count; ind_1++){
-							temp.production_isolation.push_back(pro[j].production_isolation[ind_1] + (*it).substr(1, (*it).size() - 1));
-							temp.production_isolation.erase(it);
+				for(it = temp.production_isolation.begin(); it != temp.production_isolation.end(); 
+					it++){
+						if((*it)[0] == pro[j].left){
+							for(int ind_1 = 0; ind_1 < pro[j].isolation_count; ind_1++){
+								temp.production_isolation.push_back(pro[j].production_isolation[ind_1] 
+								+ (*it).substr(1, (*it).size() - 1));
+								temp.production_isolation.erase(it);
+							}
 						}
-					}
 
 				}
 			}
@@ -159,11 +161,13 @@ public:
 					pro[k1] = pro[k1 - 1];
 					pro[k1].left++;
 					for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
-						if(pro[k1].production_union[k2] - pro[i].left > 0 && pro[k1].production_union[k2] - '\0' < 91){
-							pro[k1].production_union[k2]++;
+						if(pro[k1].production_union[k2] - pro[i].left > 0 
+							&& pro[k1].production_union[k2] - '\0' < 91){
+								pro[k1].production_union[k2]++;
 						}
 					}
-					pro[k1].union_to_isolation(pro[k1].production_union, pro[k1].production_isolation);
+					pro[k1].union_to_isolation(pro[k1].production_union, 
+						pro[k1].production_isolation);
 					pro[k1].isolation_count = pro[k1].production_isolation.size();
 				}
 
@@ -189,11 +193,13 @@ public:
 				//更新下标i以前的pro
 				for(int k1 = nonterminals_count - 1; k1 >= 0; k1--){
 					for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
-						if(pro[k1].production_union[k2] - pro[i].left > 0 && pro[k1].production_union[k2] - '\0' < 91){
-							pro[k1].production_union[k2]++;
+						if(pro[k1].production_union[k2] - pro[i].left > 0 && 
+							pro[k1].production_union[k2] - '\0' < 91){
+								pro[k1].production_union[k2]++;
 						}
 					}
-					pro[k1].union_to_isolation(pro[k1].production_union, pro[k1].production_isolation);
+					pro[k1].union_to_isolation(pro[k1].production_union, 
+						pro[k1].production_isolation);
 					pro[k1].isolation_count = pro[k1].production_isolation.size();
 				}
 			}else{
@@ -300,15 +306,16 @@ public:
 							if((*vs)[k] == pro[i].left){
 								calculate_first_genaral(follow[i], 
 									(*vs).substr(k + 1, (*vs).size() - k - 1));
-								if((follow[i].begin() == follow[i].end() || *(follow[i].begin()) == '!') && j != i){
-									if((follow[i].begin()) != follow[i].end()){
-										follow[i].erase(follow[i].begin());
-									}
-									for(vector<char>::iterator it = follow[j].begin(); 
-										it != follow[j].end(); it++){
-											follow[i].push_back(*it);
-									}
-									sort(follow[i].begin(), follow[i].end());
+								if((follow[i].begin() == follow[i].end() || *(follow[i].begin()) 
+									== '!') && j != i){
+										if((follow[i].begin()) != follow[i].end()){
+											follow[i].erase(follow[i].begin());
+										}
+										for(vector<char>::iterator it = follow[j].begin(); 
+											it != follow[j].end(); it++){
+												follow[i].push_back(*it);
+										}
+										sort(follow[i].begin(), follow[i].end());
 								}
 							}
 						}
@@ -329,60 +336,128 @@ public:
 };
 
 class Predicting_Analysis_Table{		//预测分析表类
-private:
+public:
 	Index terminals_index;	//终结符的索引
 	Index nonterminals_index;	//非终结符的索引
 	string predicting_analysis_table[50][50];	//预测分析表
+	char terminals[50];
+	char nonterminals[50];
 
 public:
-	Predicting_Analysis_Table(CFG cfg){
+	Predicting_Analysis_Table(CFG& cfg){
 		//待实现，构造预测分析表
+		for(int i = 0; i < cfg.terninals_count; i++){
+			terminals[i] = cfg.terminals[i];
+			terminals_index[cfg.terminals[i]] = i;
+		}
+		terminals[terminals_index.size()] = '#';
+		terminals_index['#'] = terminals_index.size();
+
+		for(int i = 0; i < cfg.nonterminals_count; i++){
+			nonterminals[i] = cfg.nonterminals[i];
+			nonterminals_index[cfg.nonterminals[i]] = i;
+		}
+		
+
+		for(int i = 0; i < cfg.nonterminals_count; i++){
+			for(vector<string>::iterator it_vs = cfg.pro[i].production_isolation.begin(); 
+				it_vs != cfg.pro[i].production_isolation.end(); it_vs++){
+					vector<char> vc;
+					cfg.calculate_first_genaral(vc, *it_vs);
+					for(vector<char>::iterator it_vc = vc.begin(); it_vc != vc.end(); it_vc++){
+						if(*it_vc == '!'){
+							continue;
+						}else{
+							predicting_analysis_table[nonterminals_index[cfg.pro[i].left]][
+								terminals_index[*it_vc]] = *it_vs;
+						}
+					}
+			}
+			if(*(cfg.first[i].begin()) == '!'){
+				for(vector<char>::iterator it_vc = cfg.follow[i].begin(); it_vc != cfg.follow[i].end(); 
+					it_vc++){
+						predicting_analysis_table[nonterminals_index[
+							cfg.pro[i].left]][terminals_index[*it_vc]] = "!";
+				}
+			}
+		}
+	}
+
+	void display_predicting_analysis_table(){
+		cout<<"	";
+		for(int i = 0; i < terminals_index.size(); i++){
+			cout<<terminals[i]<<"	";
+		}
+		cout<<endl;
+		for(int i = 0; i < nonterminals_index.size(); i++){
+			cout<<nonterminals[i]<<":	";
+			for(int j = 0; j < terminals_index.size(); j++){
+				cout<<predicting_analysis_table[i][j]<<"	";
+			}
+			cout<<endl;
+		}
 	}
 };
 
 class Symbol_Table_Item{		//符号表中的一条记录
-private:
+public:
 	string internal_identification;		//记号的内部表示
 	string external_identification;		//记号的外部表示
 	char grammar_identification;	//记号在文法中的表示
 	int token_index;	//记号的类型编号
 	int address;	//如果是标识符，则存储记号的地址
 	int size;	//如果是标识符，则存储在内存中所占的大小
+
+	void init(char c){
+		grammar_identification = c;
+	}
 };
 
 class Symbol_Table_Manager{		//符号表管理器类
-private:
+public:
 	Symbol_Table_Item symbol_table[1000];	//符号表
-	int Symbol_Table_Item_Count;
+	int symbol_table_item_count;
+
+	Symbol_Table_Manager(string s){
+		symbol_table_item_count = s.size();
+		for(int i = 0; i < s.size(); i++){
+			symbol_table[i].init(s[i]);
+		}
+	}
 };
 
-class Analysis_Tree_Node{		//该类代表分析树中的结点，其指针类型代表一颗分析树
-private:
-	int index_in_symbol_table;	//元素在符号表中的下标
-	Analysis_Tree_Node *firstchild, *nextsibling;		//树的二叉链表表示法
-};
-
-typedef Analysis_Tree_Node *Analysis_Tree;		//分析树
+//class Analysis_Tree_Node{		//该类代表分析树中的结点，其指针类型代表一颗分析树
+//private:
+//	int index_in_symbol_table;	//元素在符号表中的下标
+//	Analysis_Tree_Node *firstchild, *nextsibling;		//树的二叉链表表示法
+//};
+//
+//typedef Analysis_Tree_Node *Analysis_Tree;		//分析树
 
 class LL1_Driver{		//驱动器类，实现LL(1)驱动器算法
-private:
+public:
 	stack<char> symbol_stack;	//符号栈
-	stack<int> index_in_symbol_table_stack;	//存储符号栈中的元素在符号表中对应的下标,两个栈保持动作的同步 
+	//stack<int> index_in_symbol_table_stack;	
+	//存储符号栈中的元素在符号表中对应的下标,两个栈保持动作的同步 
 
 public:
-	Analysis_Tree run_driver(Symbol_Table_Manager stm, Predicting_Analysis_Table pat){
-		Analysis_Tree ret = new Analysis_Tree_Node();
+	int run_driver(Symbol_Table_Manager stm, Predicting_Analysis_Table pat){
+		//Analysis_Tree ret = new Analysis_Tree_Node();
 		//待实现(驱动器算法)
-		return ret;
+		int error_code = 0;
+
+		return error_code;
 	}
 };
 
 int main(){
-	//char terminals[50] = {'k', 'i', 'n', '+', '-', '=', '*', '/', '(', ')', '{', '}'};		//终结符
+	//char terminals[50] = {'k', 'i', 'n', '+', '-', '=', '*', '/', '(', ')', '{', '}'};		
+	//终结符
 	//int terninals_count = 12;	
 	//char nonterminals[50] = {'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'};		//非终结符
 	//int nonterminals_count = 8;		
-	//string pro_array[50] = {"B(){C}", "kiD", ",iD|;|!", "E;C|!", "i=F|B", "F+G|F-G|G", "G*H|G/H|H", "(F)|i|n"};
+	//string pro_array[50] = {"B(){C}", "kiD", ",iD|;|!", "E;C|!", "i=F|B", 
+	//"F+G|F-G|G", "G*H|G/H|H", "(F)|i|n"};
 	//int productions_count = 8;
 
 	char terminals[50] = "abcde";		//终结符
@@ -391,7 +466,8 @@ int main(){
 	int nonterminals_count = 4;		
 	string pro_array[50] = {"aBDe", "bC", "!|bcC", "d"};
 	int productions_count = 4;
-	CFG cfg(terminals, terninals_count, nonterminals, nonterminals_count, pro_array, productions_count);
+	CFG cfg(terminals, terninals_count, nonterminals, 
+		nonterminals_count, pro_array, productions_count);
 	cfg.calculate_first();
 	cfg.display_fisrt();
 	vector<char> vc;
@@ -399,6 +475,10 @@ int main(){
 	cfg.display_vc(vc);
 	cfg.calculate_follow();
 	cfg.display_follow();
-
+	Predicting_Analysis_Table pat(cfg);
+	pat.display_predicting_analysis_table();
+	Symbol_Table_Manager stm("abbcde");
+	LL1_Driver ll1_driver(stm, pat);
+	int error_code = ll1_driver.run_driver();
 	return 0;
 }
