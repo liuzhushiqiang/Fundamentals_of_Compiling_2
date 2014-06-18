@@ -210,7 +210,7 @@ public:
 					}
 
 					//更新productions_count,nonterminals_count
-					productions_count ++;
+					productions_count++;
 					nonterminals_count++;
 				}else{
 					continue;
@@ -220,10 +220,137 @@ public:
 	}
 
 	/************************************************************************/
+	/* 找最长公共前缀                                                       */
+	/************************************************************************/
+	int find_longest_prefix(int i, vector<string>::iterator& s, vector<string>::iterator& e, string& p){
+		int ret = 0;
+		for(vector<string>::iterator it_vs = pro[i].production_isolation.begin(); 
+			it_vs + 1 != pro[i].production_isolation.end(); it_vs++){
+				if((*(it_vs))[0] == (*(it_vs + 1))[0]){
+					ret = 1;
+					//有公共前缀，接下来找最长公共前缀
+					int ind = 1;
+					while(ind < min((*it_vs).size(), (*(it_vs + 1)).size()) 
+						&& (*it_vs)[ind] == (*(it_vs + 1))[ind]){
+						ind++;
+					}
+					p = (*it_vs).substr(0, ind);
+
+					vector<string>::iterator it_temp = it_vs + 2; 
+					while(it_temp != pro[i].production_isolation.end() 
+						&& 0 == (*it_temp).find_first_of(p, 0)){
+						it_temp++;
+					}
+					s = it_vs;
+					e = it_temp;
+					break;
+				}else{
+					continue;
+				}
+		}
+		return ret;
+	}
+
+	/************************************************************************/
 	/* 消除左因子                                                           */
 	/************************************************************************/
 	void eleminate_left_divisor(){
+		for(int i = productions_count - 1; i >= 0; i--){
+			while(1){
+				vector<string>::iterator s = pro[i].production_isolation.begin();
+				vector<string>::iterator e = (pro[i].production_isolation.begin())++;
+				string p = "";
+				if(find_longest_prefix(i, s, e, p)){
+					/*
+					 * 找到最长公共前缀
+					 */
 
+					//先把所有的产生式后移，并修改相应的非终结符
+					for(int k1 = nonterminals_count; k1 >= i + 2; k1--){
+						nonterminals[k1] = nonterminals[k1 - 1];
+						pro[k1] = pro[k1 - 1];
+						pro[k1].left++;
+						for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
+							if(pro[k1].production_union[k2] - pro[i].left > 0 
+								&& pro[k1].production_union[k2] - '\0' < 91){
+									pro[k1].production_union[k2]++;
+							}
+						}
+						pro[k1].union_to_isolation(pro[k1].production_union, 
+							pro[k1].production_isolation);
+					}
+
+					//创建新的非终结符，并创建新production对象。
+					nonterminals[i + 1] = nonterminals[i] + 1;
+
+					vector<string> new_production_isolation1;
+					vector<string> new_production_isolation2;
+					pro[i + 1].left = pro[i].left + 1;	//pro[i]就是temp
+					std::vector<string>::iterator it1;
+					for(it1 = pro[i].production_isolation.begin(); 
+						it1 != s; it1++){
+							new_production_isolation1.push_back(*it1);
+					}
+					for( ; it1 != e; it1++){
+						string temp = (*it1).substr(p.size(), ((*it1).size() - p.size()));
+						if(temp != ""){
+							new_production_isolation2.push_back(temp);
+						}else{
+							new_production_isolation2.push_back("!");
+						}
+					}
+					for( ; it1 != pro[i].production_isolation.end(); it1++){
+						new_production_isolation1.push_back(*it1);
+					}
+					pro[i].production_isolation = new_production_isolation1;
+					pro[i].format_from_production_isolation();
+					pro[i + 1].production_isolation = new_production_isolation2;
+					pro[i + 1].format_from_production_isolation();
+
+					//下标恰好为i的产生式单独拿出来处理
+					for(int k3 = 0; k3 < pro[i].production_union.size(); k3++){
+						if(pro[i].production_union[k3] - pro[i].left > 0 && 
+							pro[i].production_union[k3] - '\0' < 91){
+								pro[i].production_union[k3]++;
+						}
+					}
+
+					pro[i].union_to_isolation(pro[i].production_union, 
+						pro[i].production_isolation);
+
+					//A-->aA~这一条单独处理
+					string p_temp = p;
+					for(int i_temp = 0; i_temp < p.size(); i_temp++){
+						if(p[i_temp] > pro[i].left && p[i_temp] - 0 < 91){
+							p_temp[i_temp] = (p[i_temp] + 1);
+						}else{
+							p_temp[i_temp] = (p[i_temp]);
+						}
+					}
+					pro[i].production_isolation.push_back(p_temp + (char)(pro[i].left + 1));
+					pro[i].isolation_to_union(pro[i].production_union, pro[i].production_isolation);
+
+					//更新下标i以前的产生式
+					for(int k1 = i - 1; k1 >= 0; k1--){
+						for(int k2 = 0; k2 < pro[k1].production_union.size(); k2++){
+							if(pro[k1].production_union[k2] - pro[i].left > 0 && 
+								pro[k1].production_union[k2] - '\0' < 91){
+									pro[k1].production_union[k2]++;
+							}
+						}
+						pro[k1].union_to_isolation(pro[k1].production_union, 
+							pro[k1].production_isolation);
+					}
+
+					//更新productions_count,nonterminals_count
+					productions_count++;
+					nonterminals_count++;
+				}else{
+					//没有找到公共前缀
+					break;
+				}
+			}
+		}
 	}
 
 	/************************************************************************/
@@ -581,6 +708,24 @@ int main(){
 	//int nonterminals_count = 4;		
 	//string pro_array[50] = {"aBDe", "bC", "!|bcC", "d"};
 	//int productions_count = 4;
+
+	//char terminals[50] = "abeit";		//终结符
+	//int terninals_count = 5;	
+	//char nonterminals[50] = {"AB"};		//非终结符
+	//int nonterminals_count = 2;		
+	//string pro_array[50] = {"iBtA|iBtAeA|a", "b"};
+	//int productions_count = 2;
+
+	//CFG cfg(terminals, terninals_count, nonterminals, 
+	//	nonterminals_count, pro_array, productions_count);
+	//cout<<"消除左递归，左因子之前";
+	//cfg.display_productions();
+	//cfg.eleminate_left_recursion();
+	//cfg.eleminate_left_divisor();
+	//cout<<"消除左递归，左因子之后";
+	//cfg.display_productions();
+	//cout<<endl;
+	//system("pause");
 
 	char terminals[50] = "abcde";		//终结符
 	int terninals_count = 5;	
